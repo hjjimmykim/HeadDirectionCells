@@ -1,0 +1,32 @@
+.button {
+    margin-right: 10px;
+    width:90px;
+    height:30px;
+    color:white;
+    background-color: steelblue;
+    align-items: center;
+    justify-content: center;
+    display:flex;
+}  
+.button:hover {
+    background-color: lightsteelblue;
+    cursor: pointer;
+}
+
+.line {
+  fill: none;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+#slidecontainer {
+    width: 100%;
+}
+
+.slider {
+    width: 100%;
+}
+
+.slider:hover {
+    cursor: pointer;
+}
