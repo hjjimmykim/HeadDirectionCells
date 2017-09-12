@@ -1,3 +1,3 @@
 # HeadDirectionCells
 
-Go to https://hjjimmykim.github.io/HeadDirectionCells/
+https://hjjimmykim.github.io/HeadDirectionCells/
