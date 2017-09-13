@@ -1,6 +1,10 @@
+.button_wrapper {
+	display:inline-block;
+}
+
 .button {
-    margin-right: 10px;
-    width:90px;
+    margin-left: 10px;
+    width:80px;
     height:30px;
     color:white;
     background-color: steelblue;

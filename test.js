@@ -1,5 +1,9 @@
 //--- Variables ---//
 
+// MLE simulation parameters
+var T = 100;    // Total number of iterations
+var t = 500;    // Transition time
+
 // Display properties
 var width = window.innerWidth/2;
 var height = 0.8*window.innerHeight;
@@ -10,12 +14,15 @@ var hCompass = parseInt(compass.style("height"));
 
 // Neuron properties
 var rMax = 1;   // Maximum firing rate
-var sTrue = 0;  // Actual stimulus (starting value)
+var sTrue = 0;  // Actual stimulus
+var sEst = NaN;   // Estimated stimulus
 
 // Initializing global variables
 var e = document.getElementById("selectN");
 var N = parseInt(e.value);
 var circles = null;
+var neuronIndex = null;
+var isCollectingSpikes = false; // Simulation ongoing or not
     
 //--- Math Functions ---//
 
@@ -36,6 +43,37 @@ function gaussian(s,mu) {
     return rMax*Math.exp(-Math.pow(wd,2)/(2*Math.pow(sigma,2)));
 }
 
+// Square tuning curve
+function square(s,mu) {
+    wd = wrapDistance(s,mu);
+    if (wd < sigma) {
+        return rMax;
+    }
+    else {
+        return 0;
+    }
+}
+
+// Sine tuning curve
+function sine(s,mu) {
+    wd = wrapDistance(s,mu);
+    return Math.sin(wd/sigma);
+}
+
+// Poisson random number generator
+function poiss(lambda) {
+    var L = Math.exp(-lambda);
+    var p = 1.0;
+    var k = 0;
+    
+    do {
+        k++;
+        p *= Math.random();
+    } while (p > L);
+    
+    return k-1;
+}
+
 //--- Display functions ---//
 
 // Set Styles
@@ -52,20 +90,26 @@ function setStyles() {
         .attr("width", width)
         .attr("height", height);
         
-    d3.select("#Options")
-        .style("position", "absolute")
+    var opt = d3.select("#Options");
+    opt.style("position", "absolute")
         .style("top", "100px")
         .style("left", width+"px")
 
     d3.select("#Control")
         .style("position", "absolute")
-        .style("top", height/2 + "px")
+        .style("top", 100 + parseInt(opt.style("height")) + "px")
         .style("left", width+"px")
         
     d3.select("#Compass")
         .attr("width", "250px")
         .attr("height", "250px")
         .style("background", "white");
+
+    d3.select("#MLE")
+        .style("position", "absolute")
+        .style("top", "100px")
+        .style("left", width + parseInt(opt.style("width")) +"px")
+        .style("padding-left","10px");
 }
 
 // Color neurons
@@ -169,7 +213,7 @@ function drawCompass(pt) {
         .attr("x2", pt[0])
         .attr("y2", pt[1])
         .attr("stroke-width", 2)
-        .attr("stroke", "black");
+        .attr("stroke", "red");
     
     // Extract true stimulus
     sTrue = Math.atan2(pt[1]-hCompass/2,pt[0]-wCompass/2) + Math.PI/2;
@@ -189,18 +233,21 @@ function redraw() {
     
     setStyles();
     drawNetwork();
+    if (isCollectingSpikes) {
+        deleteSpikes();
+    }
 }
 
 window.addEventListener("resize", redraw);
 
 // Reset function
-function buttonSet() {
+function reSet() {
     setVariables();
     drawNetwork();
 }
 
 // Redraw upon N selection change
-e.addEventListener("change", buttonSet, false);
+e.addEventListener("change", reSet, false);
 
 // Slider
 var slider = document.getElementById("sigmaSlider");
@@ -213,7 +260,76 @@ slider.oninput = function() {
     let sliderVal = parseInt(this.value);
     output.innerHTML = (sliderVal/100).toFixed(2);
     sigma = sliderVal/100;
-    buttonSet();
+    reSet();
+}
+
+// Delete spikes
+function deleteSpikes() {
+    // Delete spikes
+    d3.select('#Network')
+        .selectAll('line')
+        .data([])
+        .exit()
+        .remove();
+}
+
+// Draw spikes
+function drawSpikes(spikeIndex) {
+    // Delete spikes
+    deleteSpikes();
+        
+    // Create spikes
+    var spikes = d3.select('#Network')
+        .selectAll('line')
+        .data(neuronIndex).enter().append("line");
+        
+    // Spike locations
+    spikes.attr("x1", baselen/2)
+        .attr("y1", baselen/2)
+        .attr("stroke-width", 2)
+        .attr("stroke", "black")
+        .attr("x2",baselen/2)
+        .attr("y2",baselen/2)
+        .transition()
+        .duration(t)
+        .attr("x2", function (d,i) {return baselen/2*(1 + 0.1*spikeIndex[i]*Math.cos(-Math.PI/2 + 2*Math.PI*i/N));})
+        .attr("y2", function (d,i) {return baselen/2*(1 + 0.1*spikeIndex[i]*Math.sin(-Math.PI/2 + 2*Math.PI*i/N));});
+}
+
+// Draw stimuli
+function drawStimulus() {
+    
+}
+
+// Analyze spikes
+function analyzeSpikes() {
+    // Poisson sampling
+    var spikeIndex = neuronIndex.map(function(e) {return poiss(gaussian(e,sTrue))});
+    
+    // Population vector estimate
+    
+    
+    // Draw spikes
+    drawSpikes(spikeIndex);
+    
+    // Draw stimuli
+    if (!isNaN(sEst)) {
+        drawStimulus();
+    }
+}
+
+// Start spike simulation
+function collectSpikes() {
+    if (!isCollectingSpikes) {
+        isCollectingSpikes = true;
+        document.getElementById("buttonMLE").innerHTML = '---';
+
+        for (let i=0; i<T; i++) {
+            (function(i) {
+                setTimeout(function() {analyzeSpikes();}, t*i);
+            }(i));
+        }
+    }
 }
 
 //--- Main ---//
