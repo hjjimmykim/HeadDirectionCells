@@ -18,11 +18,12 @@ var sTrue = 0;  // Actual stimulus
 var sEst = NaN;   // Estimated stimulus
 
 // Initializing global variables
-var e = document.getElementById("selectN");
-var N = parseInt(e.value);
-var circles = null;
-var neuronIndex = null;
+var e = document.getElementById("selectN"); // Extract N
+var N = parseInt(e.value);      // Number of neurons
+var circles = null;             // Graphics in Control
+var neuronIndex = [];           // Neurons (contains angle pos)
 var isCollectingSpikes = false; // Simulation ongoing or not
+var arrayMSE = [];              // Mean squared errors (up to each time step)
     
 //--- Math Functions ---//
 
@@ -95,20 +96,26 @@ function setStyles() {
         .style("top", "100px")
         .style("left", width+"px")
 
-    d3.select("#Control")
-        .style("position", "absolute")
+    var con = d3.select('#Control');
+    con.style("position", "absolute")
         .style("top", 100 + parseInt(opt.style("height")) + "px")
-        .style("left", width+"px")
+        .style("left", width+"px");
         
     d3.select("#Compass")
         .attr("width", "250px")
         .attr("height", "250px")
         .style("background", "white");
 
-    d3.select("#MLE")
-        .style("position", "absolute")
+    var sim = d3.select('#MLE');
+    sim.style("position", "absolute")
         .style("top", "100px")
-        .style("left", width + parseInt(opt.style("width")) +"px")
+        .style("left", width + parseInt(con.style("width")) +"px")
+        .style("padding-left","10px");
+        
+    d3.select('#MLEplot')
+        .style("position", "absolute")
+        .style("top", 100 + parseInt(opt.style("height")) + "px")
+        .style("left", width + parseInt(con.style("width")) +"px")
         .style("padding-left","10px");
 }
 
@@ -263,6 +270,11 @@ slider.oninput = function() {
     reSet();
 }
 
+// Draw MSE plot
+function drawMSE() {
+    
+}
+
 // Delete spikes
 function deleteSpikes() {
     // Delete spikes
@@ -292,46 +304,85 @@ function drawSpikes(spikeIndex) {
         .attr("stroke", "red")
         .attr("x2", function(d,i) {return baselen/2*(1+0.5*Math.cos(d-Math.PI/2));})
         .attr("y2", function(d,i) {return baselen/2*(1+0.5*Math.sin(d-Math.PI/2));});
-
-    // Create spikes
-    var spikes = d3.select('#Network')
-        .selectAll('line')
-        .data(neuronIndex).enter().append("line");
-        
-    // Spike locations
-    spikes.attr("x1", baselen/2)
-        .attr("y1", baselen/2)
-        .attr("stroke-width", 2)
-        .attr("stroke", "black")
-        .attr("x2",baselen/2)
-        .attr("y2",baselen/2)
-        .transition()
-        .duration(t)
-        .attr("x2", function (d,i) {return baselen/2*(1 + 0.1*spikeIndex[i]*Math.cos(-Math.PI/2 + 2*Math.PI*i/N));})
-        .attr("y2", function (d,i) {return baselen/2*(1 + 0.1*spikeIndex[i]*Math.sin(-Math.PI/2 + 2*Math.PI*i/N));});
         
     // Create estimated stimulus
     var estStimulus = d3.select('#Network')
         .selectAll('line')
-        .data([sEst])
+        .data([sEst], function(d) {return d;})
         .enter()
         .append("line");
-    
+ 
     // Estimated stimulus location
     estStimulus.attr("x1", baselen/2)
         .attr("y1", baselen/2)
         .attr("stroke-width", 2)
         .attr("stroke", "cyan")
-        .attr("x2", function(d,i) {if (isNaN(d)) {return baselen/2;} else {return baselen/2*(1+0.5*Math.cos(-Math.PI/2 + 2*Math.PI*d/N));}})
-        .attr("y2", function(d,i) {if (isNaN(d)) {return baselen/2;} else {return baselen/2*(1+0.5*Math.sin(-Math.PI/2 + 2*Math.PI*d/N));}})
+        .attr("x2", function(d,i) {if (isNaN(d)) {return baselen/2;} else {return baselen/2*(1+0.5*Math.cos(d - Math.PI/2));}})
+        .attr("y2", function(d,i) {if (isNaN(d)) {return baselen/2;} else {return baselen/2*(1+0.5*Math.sin(d - Math.PI/2));}});
+
+    // Create spikes
+    var spikes = d3.select('#Network')
+        .selectAll('line')
+        .data(spikeIndex, function(d) {return d;})
+        .enter()
+        .append("line");
+        
+    // New coordinates
+    var x_new = spikeIndex.map(function(d,i) {return baselen/2*(1 + 0.1*d*Math.cos(-Math.PI/2 + 2*Math.PI*i/N));});
+    var y_new = spikeIndex.map(function(d,i) {return baselen/2*(1 + 0.1*d*Math.sin(-Math.PI/2 + 2*Math.PI*i/N));});
+    
+    // Spike locations
+    spikes.attr("x1", baselen/2)
+        .attr("y1", baselen/2)
+        .attr("stroke-width", 3)
+        .attr("stroke", "black")
+        .attr("x2",baselen/2)
+        .attr("y2",baselen/2)
+        .transition()
+        .duration(0.5*t)
+        .attr("x2", function (d,i) {return x_new[i];})
+        .attr("y2", function (d,i) {return y_new[i];});
+        
+
 }
 
 // Analyze spikes
 function analyzeSpikes() {
     // Poisson sampling
-    var spikeIndex = neuronIndex.map(function(e) {return poiss(gaussian(e,sTrue))});
+    var spikeIndex = neuronIndex.map(function(e) {return poiss(gaussian(e,sTrue));});
     
     // Population vector estimate
+    var x = neuronIndex.map(function(e) {return Math.cos(e);});
+    var y = neuronIndex.map(function(e) {return Math.sin(e);});
+    
+    var xWeightedSum = 0;
+    var yWeightedSum = 0;
+    for (var i=0; i < spikeIndex.length; i++) {
+        xWeightedSum += spikeIndex[i]*x[i];
+        yWeightedSum += spikeIndex[i]*y[i];
+    }
+    
+    // Check for zero response and calculate PopVec estimate and Squared Error
+    if (xWeightedSum === 0 && yWeightedSum === 0) {
+        sEst = NaN;
+        var SE = Math.pow(Math.PI,2)/3;   // Expected SE for random guessing
+    }
+    else {
+        sEst = Math.atan2(yWeightedSum,xWeightedSum);
+        var SE = Math.pow(wrapDistance(sEst,sTrue),2);
+    }
+    
+    
+    // Record MSE
+    if (arrayMSE.length === 0) {
+        arrayMSE.push(SE);  // If first time step, just record
+    }
+    else {
+        var arrayLen = arrayMSE.length;
+        var lastEl = arrayMSE[arrayLen-1];
+        
+        arrayMSE.push(lastEl + (SE - lastEl)/arrayLen); // Incremental average
+    }
     
     // Draw spikes
     drawSpikes(spikeIndex);
@@ -345,6 +396,8 @@ function cleanUp() {
     deleteSpikes();
     sEst = NaN;
     counter = 0;
+    arraySE = [];
+    arrayMSE = [];
 }
 
 // Setting up timer for delays
@@ -358,12 +411,12 @@ function collectSpikes() {
 
         // Repeat T iterations with delay t
         timer = setInterval(function() {
+            counter++;
             analyzeSpikes();
             if (counter >= T) {
-                cleanUp();
+                setTimeout(function() {cleanUp();}, t);
                 clearInterval(timer);
             }
-            counter++;
         }, t);
     }
     else {
