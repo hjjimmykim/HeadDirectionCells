@@ -290,9 +290,9 @@ function drawSpikes(spikeIndex) {
         .attr("y1", baselen/2)
         .attr("stroke-width", 2)
         .attr("stroke", "red")
-        .attr("x2", function(d,i) {return baselen/2*(1+0.5*Math.cos(-Math.PI/2 + 2*Math.PI*d/N));})
-        .attr("y2", function(d,i) {return baselen/2*(1+0.5*Math.sin(-Math.PI/2 + 2*Math.PI*d/N));})
-        
+        .attr("x2", function(d,i) {return baselen/2*(1+0.5*Math.cos(d-Math.PI/2));})
+        .attr("y2", function(d,i) {return baselen/2*(1+0.5*Math.sin(d-Math.PI/2));});
+
     // Create spikes
     var spikes = d3.select('#Network')
         .selectAll('line')
@@ -337,6 +337,16 @@ function analyzeSpikes() {
     drawSpikes(spikeIndex);
 }
 
+
+// Clean up spikes
+function cleanUp() {
+    isCollectingSpikes = false;
+    document.getElementById("buttonMLE").innerHTML = 'Start';
+    deleteSpikes();
+    sEst = NaN;
+    counter = 0;
+}
+
 // Setting up timer for delays
 var timer = null;
 var counter = 0;
@@ -350,16 +360,15 @@ function collectSpikes() {
         timer = setInterval(function() {
             analyzeSpikes();
             if (counter >= T) {
+                cleanUp();
                 clearInterval(timer);
             }
             counter++;
         }, t);
     }
     else {
+        cleanUp();
         clearInterval(timer);
-        isCollectingSpikes = false;
-        document.getElementById("buttonMLE").innerHTML = 'Start';
-        deleteSpikes();
     }
 }
 
