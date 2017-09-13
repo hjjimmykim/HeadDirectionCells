@@ -277,6 +277,21 @@ function deleteSpikes() {
 function drawSpikes(spikeIndex) {
     // Delete spikes
     deleteSpikes();
+    
+    // Create true stimulus
+    var trueStimulus = d3.select('#Network')
+        .selectAll('line')
+        .data([sTrue])
+        .enter()
+        .append("line");
+    
+    // True stimulus location
+    trueStimulus.attr("x1", baselen/2)
+        .attr("y1", baselen/2)
+        .attr("stroke-width", 2)
+        .attr("stroke", "red")
+        .attr("x2", function(d,i) {return baselen/2*(1+0.5*Math.cos(-Math.PI/2 + 2*Math.PI*d/N));})
+        .attr("y2", function(d,i) {return baselen/2*(1+0.5*Math.sin(-Math.PI/2 + 2*Math.PI*d/N));})
         
     // Create spikes
     var spikes = d3.select('#Network')
@@ -294,11 +309,21 @@ function drawSpikes(spikeIndex) {
         .duration(t)
         .attr("x2", function (d,i) {return baselen/2*(1 + 0.1*spikeIndex[i]*Math.cos(-Math.PI/2 + 2*Math.PI*i/N));})
         .attr("y2", function (d,i) {return baselen/2*(1 + 0.1*spikeIndex[i]*Math.sin(-Math.PI/2 + 2*Math.PI*i/N));});
-}
-
-// Draw stimuli
-function drawStimulus() {
+        
+    // Create estimated stimulus
+    var estStimulus = d3.select('#Network')
+        .selectAll('line')
+        .data([sEst])
+        .enter()
+        .append("line");
     
+    // Estimated stimulus location
+    estStimulus.attr("x1", baselen/2)
+        .attr("y1", baselen/2)
+        .attr("stroke-width", 2)
+        .attr("stroke", "cyan")
+        .attr("x2", function(d,i) {if (isNaN(d)) {return baselen/2;} else {return baselen/2*(1+0.5*Math.cos(-Math.PI/2 + 2*Math.PI*d/N));}})
+        .attr("y2", function(d,i) {if (isNaN(d)) {return baselen/2;} else {return baselen/2*(1+0.5*Math.sin(-Math.PI/2 + 2*Math.PI*d/N));}})
 }
 
 // Analyze spikes
@@ -308,27 +333,33 @@ function analyzeSpikes() {
     
     // Population vector estimate
     
-    
     // Draw spikes
     drawSpikes(spikeIndex);
-    
-    // Draw stimuli
-    if (!isNaN(sEst)) {
-        drawStimulus();
-    }
 }
 
+// Setting up timer for delays
+var timer = null;
+var counter = 0;
 // Start spike simulation
 function collectSpikes() {
     if (!isCollectingSpikes) {
         isCollectingSpikes = true;
-        document.getElementById("buttonMLE").innerHTML = '---';
+        document.getElementById("buttonMLE").innerHTML = 'Stop';
 
-        for (let i=0; i<T; i++) {
-            (function(i) {
-                setTimeout(function() {analyzeSpikes();}, t*i);
-            }(i));
-        }
+        // Repeat T iterations with delay t
+        timer = setInterval(function() {
+            analyzeSpikes();
+            if (counter >= T) {
+                clearInterval(timer);
+            }
+            counter++;
+        }, t);
+    }
+    else {
+        clearInterval(timer);
+        isCollectingSpikes = false;
+        document.getElementById("buttonMLE").innerHTML = 'Start';
+        deleteSpikes();
     }
 }
 
