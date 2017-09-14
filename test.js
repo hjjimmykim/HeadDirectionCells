@@ -12,6 +12,8 @@ var baselen = Math.min(width,height);
 var compass = d3.select("#Compass")
 var wCompass = parseInt(compass.style("width"));
 var hCompass = parseInt(compass.style("height"));
+var xCenter = 0.65*baselen;
+var yCenter = 0.4*baselen;
 
 // Neuron properties
 var rMax = 1;   // Maximum firing rate
@@ -154,8 +156,8 @@ function drawNetwork() {
         .data(neuronIndex).enter().append("circle");
 
     // Node locations
-    circles.attr("cx", function (d,i) {return 0.5*baselen*(1.3+0.5*Math.cos(-Math.PI/2 + 2*Math.PI*i/N));})
-        .attr("cy", function (d,i) {return 0.5*baselen*(0.8+0.5*Math.sin(-Math.PI/2 + 2*Math.PI*i/N));})
+    circles.attr("cx", function (d,i) {return xCenter + 0.25*baselen*Math.cos(-Math.PI/2 + 2*Math.PI*i/N);})
+        .attr("cy", function (d,i) {return yCenter + 0.25*baselen*Math.sin(-Math.PI/2 + 2*Math.PI*i/N);})
         .attr("r", 10)
         .style("fill", "steelblue");
         
@@ -445,8 +447,8 @@ function drawSpikes(spikeIndex) {
         .append("line");
     
     // True stimulus location
-    trueStimulus.attr("x1", baselen/2)
-        .attr("y1", baselen/2)
+    trueStimulus.attr("x1", xCenter)
+        .attr("y1", yCenter)
         .attr("stroke-width", 2)
         .attr("stroke", "red")
         .attr("x2", function(d,i) {return baselen/2*(1+0.5*Math.cos(d-Math.PI/2));})
@@ -460,12 +462,12 @@ function drawSpikes(spikeIndex) {
         .append("line");
  
     // Estimated stimulus location
-    estStimulus.attr("x1", baselen/2)
-        .attr("y1", baselen/2)
+    estStimulus.attr("x1", xCenter)
+        .attr("y1", yCenter)
         .attr("stroke-width", 2)
         .attr("stroke", "cyan")
-        .attr("x2", function(d,i) {if (isNaN(d)) {return baselen/2;} else {return baselen/2*(1+0.5*Math.cos(d - Math.PI/2));}})
-        .attr("y2", function(d,i) {if (isNaN(d)) {return baselen/2;} else {return baselen/2*(1+0.5*Math.sin(d - Math.PI/2));}});
+        .attr("x2", function(d,i) {if (isNaN(d)) {return xCenter;} else {return xCenter + 0.25*baselen*Math.cos(d - Math.PI/2);}})
+        .attr("y2", function(d,i) {if (isNaN(d)) {return yCenter;} else {return yCenter + 0.25*baselen*Math.sin(d - Math.PI/2);}});
 
     // Create spikes
     var spikes = d3.select('#Network')
@@ -475,16 +477,16 @@ function drawSpikes(spikeIndex) {
         .append("line");
         
     // New coordinates
-    var x_new = spikeIndex.map(function(d,i) {return baselen/2*(1 + 0.1*d*Math.cos(-Math.PI/2 + 2*Math.PI*i/N));});
-    var y_new = spikeIndex.map(function(d,i) {return baselen/2*(1 + 0.1*d*Math.sin(-Math.PI/2 + 2*Math.PI*i/N));});
+    var x_new = spikeIndex.map(function(d,i) {return xCenter + 0.05*d*baselen*Math.cos(-Math.PI/2 + 2*Math.PI*i/N);});
+    var y_new = spikeIndex.map(function(d,i) {return yCenter + 0.05*d*baselen*Math.sin(-Math.PI/2 + 2*Math.PI*i/N);});
     
     // Spike locations
-    spikes.attr("x1", baselen/2)
-        .attr("y1", baselen/2)
+    spikes.attr("x1", xCenter)
+        .attr("y1", yCenter)
         .attr("stroke-width", 3)
         .attr("stroke", "black")
-        .attr("x2",baselen/2)
-        .attr("y2",baselen/2)
+        .attr("x2",xCenter)
+        .attr("y2",yCenter)
         .transition()
         .duration(0.5*t)
         .attr("x2", function (d,i) {return x_new[i];})
