@@ -197,17 +197,25 @@ function drawNetwork() {
     
     // Legend
     svg.append("text")
-        .attr("x", 0.38*baselen)
+        .attr("x", 0.05*baselen)
+        .attr("y", 0.88*baselen)
+        //.style("text-anchor", "middle")
+        .text("Neural activity")
+        .attr("fill", "black")
+        .attr("font-weight", "bold");
+        
+    svg.append("text")
+        .attr("x", 0.51*baselen)
         .attr("y", 0.95*baselen)
         //.style("text-anchor", "middle")
-        .text("More active")
+        .text("High")
         .attr("fill", color(rMax));
 
     svg.append("text")
         .attr("x", 0.05*baselen)
         .attr("y", 0.95*baselen)
         //.style("text-anchor", "middle")
-        .text("Less active")
+        .text("Low")
         .attr("fill", color(0));
         
     d3.select('#Network')
@@ -235,7 +243,7 @@ function drawNetwork() {
         .attr("x", 0.71*baselen)
         .attr("y", 0.85*baselen)
         //.style("text-anchor", "middle")
-        .text("Length ~ number of spikes")
+        .text("Neural response")
         .attr("fill", "black");
     svg.append("text")
         .attr("x", 0.71*baselen)
@@ -334,13 +342,37 @@ function drawCompass(pt) {
         .attr("stroke", "red");
         
     // Draw arrowhead
-    compass.selectAll("path").remove();
+    
+    compass.selectAll("g").remove();
+    
+    var icon = compass.append("g");
+    
+    icon.attr("transform","rotate(" + 180*(sTrue-Math.PI)/Math.PI + ',' + pt[0] + ',' + pt[1] + ")");
         
-    var arrowHead = compass.append("path")
+    var arrowHead = icon.append("path")
         .style("stroke", "red")
         .style("fill", "red")
-        .attr("transform","rotate(" + 180*(sTrue-Math.PI)/Math.PI + ',' + pt[0] + ',' + pt[1] + ")")
         .attr("d", "M " + (pt[0]-5) + "," + (pt[1]-10) + ", L " + (pt[0]+5) + "," + (pt[1]-10) + ", L " + pt[0] + "," + pt[1] + " Z");
+      
+/*      
+    // Draw pizza
+    var data = 
+    compass.select("#Pizza").remove();
+    
+    var pizza = compass.selectAll("circle")
+        .
+    
+        // Create nodes
+    circles = d3.select('#Network')
+        .selectAll('circle')
+        .data(neuronIndex).enter().append("circle");
+
+    // Node locations
+    circles.attr("cx", function (d,i) {return xCenter + 0.25*baselen*Math.cos(-Math.PI/2 + 2*Math.PI*i/N);})
+        .attr("cy", function (d,i) {return yCenter + 0.25*baselen*Math.sin(-Math.PI/2 + 2*Math.PI*i/N);})
+        .attr("r", 10)
+        .style("fill", color(0));
+        */
     
     // Extract true stimulus
     sTrue = Math.atan2(pt[1]-hCompass/2,pt[0]-wCompass/2) + Math.PI/2;
