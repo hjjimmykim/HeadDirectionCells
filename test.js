@@ -533,7 +533,7 @@ function drawSpikes(spikeIndex) {
             .attr("font-size",1)
             .transition()
             .duration(0.5*t)
-            .attr("font-size", 20);
+            .attr("font-size", 35);
     }
 }
 
