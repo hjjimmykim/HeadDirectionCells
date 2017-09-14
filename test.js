@@ -3,6 +3,7 @@
 // MLE simulation parameters
 var T = 100;    // Total number of iterations
 var t = 500;    // Transition time
+var n = 20;     // Moving average window
 
 // Display properties
 var width = window.innerWidth/2;
@@ -23,6 +24,7 @@ var N = parseInt(e.value);      // Number of neurons
 var circles = null;             // Graphics in Control
 var neuronIndex = [];           // Neurons (contains angle pos)
 var isCollectingSpikes = false; // Simulation ongoing or not
+var arraySE = [];               // Squared errors (at each time step)
 var arrayMSE = [];              // Mean squared errors (up to each time step)
     
 //--- Math Functions ---//
@@ -101,8 +103,8 @@ function setStyles() {
         .style("top", 100 + parseInt(opt.style("height")) + "px")
         .style("left", width+"px");
         
-    d3.select("#Compass")
-        .attr("width", "250px")
+    var com = d3.select('#Compass');
+    com.attr("width", "250px")
         .attr("height", "250px")
         .style("background", "white");
 
@@ -117,6 +119,11 @@ function setStyles() {
         .style("top", 100 + parseInt(opt.style("height")) + "px")
         .style("left", width + parseInt(con.style("width")) +"px")
         .style("padding-left","10px");
+        
+    d3.select('#svgPlot')
+        .attr("width", parseInt(com.style("width")) + "px")
+        .attr("height", parseInt(com.style("height")) + "px")
+        .style("background", "white");
 }
 
 // Color neurons
@@ -152,6 +159,49 @@ function drawNetwork() {
         .attr("r", 10)
         .style("fill", "steelblue");
         
+    var svg = d3.select('#Network');
+    
+    // Colorbar
+    //svg.append('g')
+     //   .attr("transform", "translate(" + 0.2*wPlot + "," + 0.85*hPlot + ")")
+      //  .call(d3.axisLeft(color));
+    
+    // Delete Legend
+    d3.select('#Network')
+        .selectAll('text')
+        .remove();
+    
+    // Legend
+    svg.append("text")
+        .attr("x", 0.15*baselen)
+        .attr("y", 0.1*baselen)
+        .style("text-anchor", "middle")
+        .text("More active")
+        .attr("fill", "crimson");
+
+    svg.append("text")
+        .attr("x", 0.15*baselen)
+        .attr("y", 0.15*baselen)
+        .style("text-anchor", "middle")
+        .text("Less active")
+        .attr("fill", "lightsteelblue");
+        
+    /*
+    var lineColors = ["black", "red", "cyan"];
+    // Simulation legend
+    var labelLines = svg.selectAll('line')
+        .data(lineColors)
+        .enter()
+        .append("line");
+        
+    // Location
+    labelLines.attr("x1", 0.8*baselen)
+        .attr("y1", function(d,i) {return (0.1 + 0.05*i)*baselen;})
+        .attr("stroke-width", 2)
+        .attr("stroke", function(d) {return d;})
+        .attr("x2", 0.85*baselen)
+        .attr("y2", function(d,i) {return (0.1 + 0.05*i)*baselen;});
+    */
     updateNetwork();
 }
 
@@ -272,7 +322,59 @@ slider.oninput = function() {
 
 // Draw MSE plot
 function drawMSE() {
+    // Clear plot and axes from previous run
+    var svg = d3.select('#svgPlot');
+    svg.selectAll("path").remove();
+    svg.selectAll("g").remove();
+        
+    var plot = d3.select('#svgPlot');
+    var wPlot = parseInt(plot.style("width"));
+    var hPlot = parseInt(plot.style("height"));
     
+    // Set axis scales
+    var maxY = Math.max(0.5,1.5*Math.max(...arrayMSE));
+    console.log(arrayMSE);
+    
+    var xPlot = d3.scaleLinear()
+        .domain([0, T])
+        .range([0, 0.6*wPlot]);
+    var yPlot = d3.scaleLinear()
+        .domain([0,maxY])
+        .range([0.8*hPlot,0]);
+
+    var svg = d3.select("#svgPlot");
+    
+    // Draw axis
+    svg.append('g')
+        .attr("transform", "translate(" + 0.2*wPlot + "," + 0.85*hPlot + ")")
+        .call(d3.axisBottom(xPlot));
+        
+    svg.append('g')
+        .attr("transform", "translate(" + 0.2*wPlot + "," + 0.05*hPlot + ")")
+        .call(d3.axisLeft(yPlot));
+        
+    // Draw plot
+    var plotLine = d3.line()
+        .x(function(d,i) {return 0.2*wPlot + xPlot(i);})
+        .y(function(d,i) {return 0.05*wPlot + yPlot(d);});
+
+    svg.append("path")
+        .attr("class", "line")
+        .attr("d", plotLine(arrayMSE));
+        
+    // Text labels
+    svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -hPlot/2)
+        .attr("y", 0.07*wPlot)
+        .style("text-anchor", "middle")
+        .text("MSE");
+        
+    svg.append("text")
+        .attr("x", wPlot/2)
+        .attr("y", 0.98*hPlot)
+        .style("text-anchor", "middle")
+        .text("Time step");
 }
 
 // Delete spikes
@@ -342,8 +444,6 @@ function drawSpikes(spikeIndex) {
         .duration(0.5*t)
         .attr("x2", function (d,i) {return x_new[i];})
         .attr("y2", function (d,i) {return y_new[i];});
-        
-
 }
 
 // Analyze spikes
@@ -379,13 +479,32 @@ function analyzeSpikes() {
     }
     else {
         var arrayLen = arrayMSE.length;
-        var lastEl = arrayMSE[arrayLen-1];
         
-        arrayMSE.push(lastEl + (SE - lastEl)/arrayLen); // Incremental average
+        arraySE.push(SE);   // SE
+        
+        /*
+        // Moving average
+        var movingAvg = 0;
+        for (var i = 0; i < n; i++) {
+            if (arrayLen-1-i < 0){
+                movingAvg *= n/i;
+                break;
+            }
+            else {
+                movingAvg += arraySE[arrayLen-1-i]/n;
+            }
+        }
+        arrayMSE.push(movingAvg);
+        */
+        // Incremental average
+        var lastEl = arrayMSE[arrayLen-1];
+        arrayMSE.push(lastEl + (SE - lastEl)/arrayLen)
     }
     
     // Draw spikes
     drawSpikes(spikeIndex);
+    // Draw MSE plot
+    drawMSE();
 }
 
 
@@ -407,7 +526,7 @@ var counter = 0;
 function collectSpikes() {
     if (!isCollectingSpikes) {
         isCollectingSpikes = true;
-        document.getElementById("buttonMLE").innerHTML = 'Stop';
+        document.getElementById("buttonMLE").innerHTML = 'Abort';
 
         // Repeat T iterations with delay t
         timer = setInterval(function() {
@@ -430,3 +549,4 @@ setStyles();
 setVariables();
 drawNetwork();
 drawHead();
+drawMSE();
