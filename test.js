@@ -224,27 +224,27 @@ function drawNetwork() {
         .append("line");
         
     // Location
-    labelLines.attr("x1", 0.75*baselen)
+    labelLines.attr("x1", 0.65*baselen)
         .attr("y1", function(d,i) {return (0.835 + 0.05*i)*baselen;})
         .attr("stroke-width", 2)
         .attr("stroke", function(d) {return d;})
-        .attr("x2", 0.8*baselen)
+        .attr("x2", 0.7*baselen)
         .attr("y2", function(d,i) {return (0.835 + 0.05*i)*baselen;});
     
     svg.append("text")
-        .attr("x", 0.81*baselen)
+        .attr("x", 0.71*baselen)
         .attr("y", 0.85*baselen)
         //.style("text-anchor", "middle")
-        .text("Number of spikes")
+        .text("Length ~ number of spikes")
         .attr("fill", "black");
     svg.append("text")
-        .attr("x", 0.81*baselen)
+        .attr("x", 0.71*baselen)
         .attr("y", 0.9*baselen)
         //.style("text-anchor", "middle")
-        .text("True stimulus")
+        .text("Original stimulus")
         .attr("fill", "red");
     svg.append("text")
-        .attr("x", 0.81*baselen)
+        .attr("x", 0.71*baselen)
         .attr("y", 0.95*baselen)
         //.style("text-anchor", "middle")
         .text("Decoded stimulus")
