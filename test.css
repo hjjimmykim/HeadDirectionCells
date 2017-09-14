@@ -1,3 +1,12 @@
+h1 {
+    color: red;
+    font-family: verdana;
+}
+
+body {
+    font-family:verdana;
+}
+
 .button_wrapper {
 	display:inline-block;
 }

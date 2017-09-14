@@ -6,8 +6,8 @@ var t = 500;    // Transition time
 var n = 20;     // Moving average window
 
 // Display properties
-var width = window.innerWidth/2;
-var height = 0.8*window.innerHeight;
+var width = 0.45*window.innerWidth;
+var height = 0.7*window.innerHeight;
 var baselen = Math.min(width,height);
 var compass = d3.select("#Compass")
 var wCompass = parseInt(compass.style("width"));
@@ -154,8 +154,8 @@ function drawNetwork() {
         .data(neuronIndex).enter().append("circle");
 
     // Node locations
-    circles.attr("cx", function (d,i) {return baselen/2*(1+0.5*Math.cos(-Math.PI/2 + 2*Math.PI*i/N));})
-        .attr("cy", function (d,i) {return baselen/2*(1+0.5*Math.sin(-Math.PI/2 + 2*Math.PI*i/N));})
+    circles.attr("cx", function (d,i) {return 0.5*baselen*(1.3+0.5*Math.cos(-Math.PI/2 + 2*Math.PI*i/N));})
+        .attr("cy", function (d,i) {return 0.5*baselen*(0.8+0.5*Math.sin(-Math.PI/2 + 2*Math.PI*i/N));})
         .attr("r", 10)
         .style("fill", "steelblue");
         
@@ -184,7 +184,7 @@ function drawNetwork() {
         
     svg.append("rect")
         .attr("fill", "url(#gradient)")
-        .attr("transform", "translate(" + 0.05*baselen + "," + 0.1*baselen + ")")
+        .attr("transform", "translate(" + 0.05*baselen + "," + 0.895*baselen + ")")
         .attr("width", 0.5*baselen + "px")
         .attr("height", 0.025*baselen + "px");
     
@@ -196,14 +196,14 @@ function drawNetwork() {
     // Legend
     svg.append("text")
         .attr("x", 0.38*baselen)
-        .attr("y", 0.155*baselen)
+        .attr("y", 0.95*baselen)
         //.style("text-anchor", "middle")
         .text("More active")
         .attr("fill", "crimson");
 
     svg.append("text")
         .attr("x", 0.05*baselen)
-        .attr("y", 0.155*baselen)
+        .attr("y", 0.95*baselen)
         //.style("text-anchor", "middle")
         .text("Less active")
         .attr("fill", "lightsteelblue");
@@ -223,27 +223,27 @@ function drawNetwork() {
         
     // Location
     labelLines.attr("x1", 0.75*baselen)
-        .attr("y1", function(d,i) {return (0.09 + 0.05*i)*baselen;})
+        .attr("y1", function(d,i) {return (0.85 + 0.05*i)*baselen;})
         .attr("stroke-width", 2)
         .attr("stroke", function(d) {return d;})
         .attr("x2", 0.8*baselen)
-        .attr("y2", function(d,i) {return (0.09 + 0.05*i)*baselen;});
+        .attr("y2", function(d,i) {return (0.85 + 0.05*i)*baselen;});
     
     svg.append("text")
         .attr("x", 0.81*baselen)
-        .attr("y", 0.1*baselen)
+        .attr("y", 0.85*baselen)
         //.style("text-anchor", "middle")
         .text("Number of spikes")
         .attr("fill", "black");
     svg.append("text")
         .attr("x", 0.81*baselen)
-        .attr("y", 0.15*baselen)
+        .attr("y", 0.9*baselen)
         //.style("text-anchor", "middle")
         .text("True stimulus")
         .attr("fill", "red");
     svg.append("text")
         .attr("x", 0.81*baselen)
-        .attr("y", 0.2*baselen)
+        .attr("y", 0.95*baselen)
         //.style("text-anchor", "middle")
         .text("Decoded stimulus")
         .attr("fill", "cyan");
