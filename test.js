@@ -313,7 +313,7 @@ function drawHead(angle = 0) {
     headeyes.attr("cx", function(d,i) {return xList[i]})
         .attr("cy", function(d,i) {return yList[i]})
         .attr("r", function(d,i) {if (i===0) {return rHead} else {return rEyes}})
-        .style("fill", function(d,i) {if (i===0) {return "orange"} else {return "red"}});
+        .style("fill", function(d,i) {if (i===0) {return "orange"} else {return "tomato"}});
     
     // Head label
     d3.select("#Compass").selectAll("text").remove();
@@ -332,53 +332,45 @@ function drawHead(angle = 0) {
 function drawCompass(pt) {
     setVariables();
     
-    // Draw arrow
-    arrowCoord = [[wCompass/2, hCompass/2], pt];
-    arrow.attr("x1", wCompass/2)
-        .attr("y1", hCompass/2)
-        .attr("x2", pt[0])
-        .attr("y2", pt[1])
-        .attr("stroke-width", 2)
-        .attr("stroke", "red");
-        
-    // Draw arrowhead
+    // Draw pizza
     
     compass.selectAll("g").remove();
     
     var icon = compass.append("g");
+    var crestWidth = 20;
+    var crestHeight = 35;
+    var sliceWidth = 17;
+    var sliceHeight = 5;
     
-    icon.attr("transform","rotate(" + 180*(sTrue-Math.PI)/Math.PI + ',' + pt[0] + ',' + pt[1] + ")");
+    icon.attr("transform","rotate(" + 180*(sTrue)/Math.PI + ',' + pt[0] + ',' + pt[1] + ")");
+    
+    icon.append("path")
+        .style("stroke", "firebrick")
+        .style("fill", "firebrick")
+        .attr("d", "M " + (pt[0]-crestWidth) + "," + (pt[1]) + ", S " + (pt[0]) + ',' + (pt[1]-20) +',' + (pt[0]+crestWidth) + "," + (pt[1]) + ", L " + pt[0] + "," + (pt[1]+crestHeight) + " Z");
         
-    var arrowHead = icon.append("path")
-        .style("stroke", "red")
-        .style("fill", "red")
-        .attr("d", "M " + (pt[0]-5) + "," + (pt[1]-10) + ", L " + (pt[0]+5) + "," + (pt[1]-10) + ", L " + pt[0] + "," + pt[1] + " Z");
-      
-/*      
-    // Draw pizza
-    var data = 
-    compass.select("#Pizza").remove();
-    
-    var pizza = compass.selectAll("circle")
-        .
-    
-        // Create nodes
-    circles = d3.select('#Network')
-        .selectAll('circle')
-        .data(neuronIndex).enter().append("circle");
-
-    // Node locations
-    circles.attr("cx", function (d,i) {return xCenter + 0.25*baselen*Math.cos(-Math.PI/2 + 2*Math.PI*i/N);})
-        .attr("cy", function (d,i) {return yCenter + 0.25*baselen*Math.sin(-Math.PI/2 + 2*Math.PI*i/N);})
-        .attr("r", 10)
-        .style("fill", color(0));
-        */
+    icon.append("path")
+        .style("stroke", "lightsalmon")
+        .style("fill", "lightsalmon")
+        .attr("d", "M " + (pt[0]-sliceWidth) + "," + (pt[1]+sliceHeight) + ", S " + (pt[0]) + ',' + (pt[1]-10) +',' + (pt[0]+sliceWidth) + "," + (pt[1]+sliceHeight) + ", L " + pt[0] + "," + (pt[1]+crestHeight) + " Z");
     
     // Extract true stimulus
     sTrue = Math.atan2(pt[1]-hCompass/2,pt[0]-wCompass/2) + Math.PI/2;
     
     // Draw head
     drawHead(sTrue);
+    
+    // Draw pepperoni
+    xP = [-5,8,-2];
+    yP = [5,10,20];
+        
+    var pepperoni = icon.selectAll("circle")
+        .data([0,1,2]).enter().append("circle");
+        
+    pepperoni.attr("cx", function(d,i) {return pt[0] + xP[i];})
+        .attr("cy", function(d,i) {return pt[1] + yP[i];})
+        .attr("r", 5)
+        .style("fill", 'red');
     
     // Recolor neurons
     updateNetwork();
