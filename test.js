@@ -161,10 +161,32 @@ function drawNetwork() {
         
     var svg = d3.select('#Network');
     
-    // Colorbar
-    //svg.append('g')
-     //   .attr("transform", "translate(" + 0.2*wPlot + "," + 0.85*hPlot + ")")
-      //  .call(d3.axisLeft(color));
+    // Delete colorbar
+    svg.selectAll("rect").remove();
+    
+    // Create colorbar
+    var defs = svg.append("defs");
+    
+    var linGrad = defs.append("linearGradient")
+        .attr("id", "gradient");
+    
+    linGrad.attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%");
+        
+    linGrad.append("svg:stop")
+        .attr("stop-color", "steelblue")
+        .attr("offset", "0%");
+    linGrad.append("svg:stop")
+        .attr("stop-color", "crimson")
+        .attr("offset", "100%");
+        
+    svg.append("rect")
+        .attr("fill", "url(#gradient)")
+        .attr("transform", "translate(" + 0.05*baselen + "," + 0.1*baselen + ")")
+        .attr("width", 0.5*baselen + "px")
+        .attr("height", 0.025*baselen + "px");
     
     // Delete Legend
     d3.select('#Network')
@@ -173,20 +195,25 @@ function drawNetwork() {
     
     // Legend
     svg.append("text")
-        .attr("x", 0.15*baselen)
-        .attr("y", 0.1*baselen)
-        .style("text-anchor", "middle")
+        .attr("x", 0.38*baselen)
+        .attr("y", 0.155*baselen)
+        //.style("text-anchor", "middle")
         .text("More active")
         .attr("fill", "crimson");
 
     svg.append("text")
-        .attr("x", 0.15*baselen)
-        .attr("y", 0.15*baselen)
-        .style("text-anchor", "middle")
+        .attr("x", 0.05*baselen)
+        .attr("y", 0.155*baselen)
+        //.style("text-anchor", "middle")
         .text("Less active")
         .attr("fill", "lightsteelblue");
         
-    /*
+    d3.select('#Network')
+        .selectAll('line')
+        .data([])
+        .exit()
+        .remove();
+        
     var lineColors = ["black", "red", "cyan"];
     // Simulation legend
     var labelLines = svg.selectAll('line')
@@ -195,13 +222,32 @@ function drawNetwork() {
         .append("line");
         
     // Location
-    labelLines.attr("x1", 0.8*baselen)
-        .attr("y1", function(d,i) {return (0.1 + 0.05*i)*baselen;})
+    labelLines.attr("x1", 0.75*baselen)
+        .attr("y1", function(d,i) {return (0.09 + 0.05*i)*baselen;})
         .attr("stroke-width", 2)
         .attr("stroke", function(d) {return d;})
-        .attr("x2", 0.85*baselen)
-        .attr("y2", function(d,i) {return (0.1 + 0.05*i)*baselen;});
-    */
+        .attr("x2", 0.8*baselen)
+        .attr("y2", function(d,i) {return (0.09 + 0.05*i)*baselen;});
+    
+    svg.append("text")
+        .attr("x", 0.81*baselen)
+        .attr("y", 0.1*baselen)
+        //.style("text-anchor", "middle")
+        .text("Number of spikes")
+        .attr("fill", "black");
+    svg.append("text")
+        .attr("x", 0.81*baselen)
+        .attr("y", 0.15*baselen)
+        //.style("text-anchor", "middle")
+        .text("True stimulus")
+        .attr("fill", "red");
+    svg.append("text")
+        .attr("x", 0.81*baselen)
+        .attr("y", 0.2*baselen)
+        //.style("text-anchor", "middle")
+        .text("Decoded stimulus")
+        .attr("fill", "cyan");
+    
     updateNetwork();
 }
 
@@ -258,7 +304,6 @@ function drawHead(angle = 0) {
         .attr("cy", function(d,i) {return yList[i]})
         .attr("r", function(d,i) {if (i===0) {return rHead} else {return rEyes}})
         .style("fill", function(d,i) {if (i===0) {return "orange"} else {return "red"}});
-  
 }
 
 // Draw Compass
@@ -333,7 +378,7 @@ function drawMSE() {
     
     // Set axis scales
     var maxY = Math.max(0.5,1.5*Math.max(...arrayMSE));
-    console.log(arrayMSE);
+    //console.log(arrayMSE);
     
     var xPlot = d3.scaleLinear()
         .domain([0, T])
@@ -382,7 +427,7 @@ function deleteSpikes() {
     // Delete spikes
     d3.select('#Network')
         .selectAll('line')
-        .data([])
+        .data(['red','black','cyan'])
         .exit()
         .remove();
 }
@@ -395,7 +440,7 @@ function drawSpikes(spikeIndex) {
     // Create true stimulus
     var trueStimulus = d3.select('#Network')
         .selectAll('line')
-        .data([sTrue])
+        .data([sTrue], function(d) {return d;})
         .enter()
         .append("line");
     
