@@ -40,6 +40,9 @@
     </span>
     <span id="MLE">
         <h2>Simulate neural decoding</h2>
+        <p>
+        Samples neural response assuming Poisson noise and uses population vector method (response-weighted vector sum of the neuron directions) to infer the original stimulus.
+        </p>
         <div class='button_wrapper'>
             <div onclick = 'collectSpikes()' class='button'>
                 <span id='buttonMLE'>Start</span>
@@ -47,7 +50,7 @@
         </div>
     </span>
     <span id="MLEplot">
-        <h2>MSE Plot</h2>
+        <h2>Mean squared error</h2>
         <svg id="svgPlot"></svg>
     </span>
 </body>

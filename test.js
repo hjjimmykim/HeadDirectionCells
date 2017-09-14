@@ -187,7 +187,7 @@ function drawNetwork() {
     svg.append("rect")
         .attr("fill", "url(#gradient)")
         .attr("transform", "translate(" + 0.05*baselen + "," + 0.895*baselen + ")")
-        .attr("width", 0.5*baselen + "px")
+        .attr("width", 0.55*baselen + "px")
         .attr("height", 0.025*baselen + "px");
     
     // Delete Legend
@@ -444,7 +444,7 @@ function drawMSE() {
         .attr("x", wPlot/2)
         .attr("y", 0.98*hPlot)
         .style("text-anchor", "middle")
-        .text("Time step");
+        .text("Trial");
 }
 
 // Delete spikes
