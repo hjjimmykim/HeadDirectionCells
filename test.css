@@ -57,3 +57,7 @@ body {
     stroke-width: 1;
     shape-rendering: crispEdges;
 }
+
+#Compass:hover {
+    cursor: none;
+}
