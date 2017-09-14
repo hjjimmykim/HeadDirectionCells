@@ -159,7 +159,7 @@ function drawNetwork() {
     circles.attr("cx", function (d,i) {return xCenter + 0.25*baselen*Math.cos(-Math.PI/2 + 2*Math.PI*i/N);})
         .attr("cy", function (d,i) {return yCenter + 0.25*baselen*Math.sin(-Math.PI/2 + 2*Math.PI*i/N);})
         .attr("r", 10)
-        .style("fill", "steelblue");
+        .style("fill", color(0));
         
     var svg = d3.select('#Network');
     
@@ -178,10 +178,10 @@ function drawNetwork() {
         .attr("y2", "0%");
         
     linGrad.append("svg:stop")
-        .attr("stop-color", "steelblue")
+        .attr("stop-color", color(0))
         .attr("offset", "0%");
     linGrad.append("svg:stop")
-        .attr("stop-color", "crimson")
+        .attr("stop-color", color(rMax))
         .attr("offset", "100%");
         
     svg.append("rect")
@@ -201,14 +201,14 @@ function drawNetwork() {
         .attr("y", 0.95*baselen)
         //.style("text-anchor", "middle")
         .text("More active")
-        .attr("fill", "crimson");
+        .attr("fill", color(rMax));
 
     svg.append("text")
         .attr("x", 0.05*baselen)
         .attr("y", 0.95*baselen)
         //.style("text-anchor", "middle")
         .text("Less active")
-        .attr("fill", "lightsteelblue");
+        .attr("fill", color(0));
         
     d3.select('#Network')
         .selectAll('line')
@@ -225,11 +225,11 @@ function drawNetwork() {
         
     // Location
     labelLines.attr("x1", 0.75*baselen)
-        .attr("y1", function(d,i) {return (0.85 + 0.05*i)*baselen;})
+        .attr("y1", function(d,i) {return (0.835 + 0.05*i)*baselen;})
         .attr("stroke-width", 2)
         .attr("stroke", function(d) {return d;})
         .attr("x2", 0.8*baselen)
-        .attr("y2", function(d,i) {return (0.85 + 0.05*i)*baselen;});
+        .attr("y2", function(d,i) {return (0.835 + 0.05*i)*baselen;});
     
     svg.append("text")
         .attr("x", 0.81*baselen)
@@ -306,11 +306,25 @@ function drawHead(angle = 0) {
         .attr("cy", function(d,i) {return yList[i]})
         .attr("r", function(d,i) {if (i===0) {return rHead} else {return rEyes}})
         .style("fill", function(d,i) {if (i===0) {return "orange"} else {return "red"}});
+    
+    // Head label
+    d3.select("#Compass").selectAll("text").remove();
+    
+    d3.select('#Compass')
+        .append("text")
+        .attr("transform","rotate(" + 180*(angle)/Math.PI + ',' + xH + ',' + yH + ")")
+        .attr("x", xH)
+        .attr("y", yH+5)
+        .attr("font-weight", "bold")
+        .style("text-anchor", "middle")
+        .text("Head");
 }
 
 // Draw Compass
 function drawCompass(pt) {
     setVariables();
+    
+    // Draw arrow
     arrowCoord = [[wCompass/2, hCompass/2], pt];
     arrow.attr("x1", wCompass/2)
         .attr("y1", hCompass/2)
@@ -318,6 +332,15 @@ function drawCompass(pt) {
         .attr("y2", pt[1])
         .attr("stroke-width", 2)
         .attr("stroke", "red");
+        
+    // Draw arrowhead
+    compass.selectAll("path").remove();
+        
+    var arrowHead = compass.append("path")
+        .style("stroke", "red")
+        .style("fill", "red")
+        .attr("transform","rotate(" + 180*(sTrue-Math.PI)/Math.PI + ',' + pt[0] + ',' + pt[1] + ")")
+        .attr("d", "M " + (pt[0]-5) + "," + (pt[1]-10) + ", L " + (pt[0]+5) + "," + (pt[1]-10) + ", L " + pt[0] + "," + pt[1] + " Z");
     
     // Extract true stimulus
     sTrue = Math.atan2(pt[1]-hCompass/2,pt[0]-wCompass/2) + Math.PI/2;
@@ -412,10 +435,10 @@ function drawMSE() {
     // Text labels
     svg.append("text")
         .attr("transform", "rotate(-90)")
-        .attr("x", -hPlot/2)
+        .attr("x", -0.4*hPlot)
         .attr("y", 0.07*wPlot)
         .style("text-anchor", "middle")
-        .text("MSE");
+        .text("MSE (cumulative)");
         
     svg.append("text")
         .attr("x", wPlot/2)
@@ -451,8 +474,8 @@ function drawSpikes(spikeIndex) {
         .attr("y1", yCenter)
         .attr("stroke-width", 2)
         .attr("stroke", "red")
-        .attr("x2", function(d,i) {return baselen/2*(1+0.5*Math.cos(d-Math.PI/2));})
-        .attr("y2", function(d,i) {return baselen/2*(1+0.5*Math.sin(d-Math.PI/2));});
+        .attr("x2", function(d,i) {return xCenter + 0.25*baselen*Math.cos(d-Math.PI/2);})
+        .attr("y2", function(d,i) {return yCenter + 0.25*baselen*Math.sin(d-Math.PI/2);});
         
     // Create estimated stimulus
     var estStimulus = d3.select('#Network')
@@ -466,6 +489,10 @@ function drawSpikes(spikeIndex) {
         .attr("y1", yCenter)
         .attr("stroke-width", 2)
         .attr("stroke", "cyan")
+        .attr("x2",xCenter)
+        .attr("y2",yCenter)
+        //.transition()
+        //.duration(0.5*t)
         .attr("x2", function(d,i) {if (isNaN(d)) {return xCenter;} else {return xCenter + 0.25*baselen*Math.cos(d - Math.PI/2);}})
         .attr("y2", function(d,i) {if (isNaN(d)) {return yCenter;} else {return yCenter + 0.25*baselen*Math.sin(d - Math.PI/2);}});
 
@@ -491,6 +518,23 @@ function drawSpikes(spikeIndex) {
         .duration(0.5*t)
         .attr("x2", function (d,i) {return x_new[i];})
         .attr("y2", function (d,i) {return y_new[i];});
+    
+    // Decoding failed
+    d3.select('#Fail').remove();
+    if (isNaN(sEst)) {
+        d3.select('#Network').append("text")
+            .attr("id", "Fail")
+            .attr("x", xCenter)
+            .attr("y", yCenter)
+            .style("text-anchor", "middle")
+            .text("?")
+            .attr("font-weight", "bold")
+            .attr("fill", "cyan")
+            .attr("font-size",1)
+            .transition()
+            .duration(0.5*t)
+            .attr("font-size", 20);
+    }
 }
 
 // Analyze spikes
@@ -564,6 +608,7 @@ function cleanUp() {
     counter = 0;
     arraySE = [];
     arrayMSE = [];
+    d3.select('#Fail').remove();
 }
 
 // Setting up timer for delays
