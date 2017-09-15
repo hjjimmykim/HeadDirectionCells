@@ -427,7 +427,6 @@ function drawMSE() {
     
     // Set axis scales
     var maxY = Math.max(0.5,1.5*Math.max(...arrayMSE));
-    //console.log(arrayMSE);
     
     var xPlot = d3.scaleLinear()
         .domain([0, T])
